@@ -36,7 +36,8 @@ A complete e-commerce platform built with **NestJS** (Backend) and **SwiftUI** (
 - RESTful API design
 - PostgreSQL database with TypeORM
 - Environment-based configuration
-- Modular architecture (Auth, Users, Products, Categories, Cart, Orders)
+- Stripe checkout: payment intents + signature-verified webhooks that move an order from `pending` to `paid`
+- Modular architecture (Auth, Users, Products, Categories, Cart, Orders, Payments)
 
 ### iOS App
 - Modern SwiftUI interface with animated gradients
@@ -294,6 +295,15 @@ POST /auth/register
 | GET | `/orders/:id` | Get single order | JWT |
 | POST | `/orders` | Create order from cart | JWT |
 
+### Payments
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/payments/create-intent` | Create a Stripe PaymentIntent for a pending order | JWT |
+| POST | `/payments/webhook` | Stripe webhook receiver (signature-verified, not JWT) | Stripe signature |
+
+Flow: client calls `create-intent` with an `orderId` and gets back a `clientSecret`, which the iOS app hands to Stripe's SDK to confirm payment. Stripe then calls `/payments/webhook`, which verifies the event signature and flips the order to `paid` (or `payment_failed`) — the order's status is never trusted from the client directly.
+
 ---
 
 ## Database Schema
@@ -337,6 +347,7 @@ POST /auth/register
 │ items (JSON)    │
 │ total (decimal) │
 │ status          │
+│ paymentIntentId │
 │ createdAt       │
 └─────────────────┘
 ```
@@ -543,7 +554,17 @@ JWT_EXPIRES_IN=1d
 # Rate Limiting
 THROTTLE_TTL=60000
 THROTTLE_LIMIT=100
+
+# Stripe (test mode keys from the Stripe dashboard)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 ```
+
+To test the webhook locally, forward Stripe events to your dev server with the [Stripe CLI](https://stripe.com/docs/stripe-cli):
+```bash
+stripe listen --forward-to localhost:3000/payments/webhook
+```
+This prints a `whsec_...` signing secret to use as `STRIPE_WEBHOOK_SECRET` while developing.
 
 Generate a secure JWT secret:
 ```bash
