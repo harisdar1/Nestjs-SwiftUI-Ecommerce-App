@@ -1,1 +1,6 @@
 .DS_Store
+nest-js-e-commerce/node_modules/
+nest-js-e-commerce/dist/
+nest-js-e-commerce/.env
+swift-nest-e-commerce/**/xcuserdata/
+swift-nest-e-commerce/**/*.xcuserstate

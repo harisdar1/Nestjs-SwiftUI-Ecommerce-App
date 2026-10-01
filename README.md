@@ -486,7 +486,7 @@ DB_PASSWORD=your-db-password
 
 ```bash
 # Navigate to backend
-cd e-commerce
+cd nest-js-e-commerce
 
 # Install dependencies
 npm install
