@@ -23,6 +23,9 @@ export class Order {
   @Column({ default: 'pending' })
   status: string;
 
+  @Column({ nullable: true })
+  paymentIntentId: string;
+
   @CreateDateColumn()
   createdAt: Date;
 }
